@@ -1,0 +1,118 @@
+{% from 'partials/_icons.html' import icon %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181b1c">
+  <title>{% block title %}{{ crumb|default('Dashboard') }}{% endblock %} · TSH Hardware Monitor</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23181b1c'/%3E%3Cpath d='M6 17h5l3-8 4 14 3-6h5' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body {% if autorefresh|default(false) %}data-autorefresh="{{ refresh_seconds }}"{% endif %}{% if session.get('user') and soc %} data-notify-url="{{ url_for('switches.notifications') }}" data-notify-every="{{ notify_seconds }}" data-max-alert="{{ soc.max_alert_id }}"{% endif %}{% if session.get('user') and active|default('') in ('overview', 'servers') %} data-host-metrics-url="{{ url_for('views.host_metrics') }}" data-host-metrics-every="{{ cfg.HOST_METRICS_REFRESH_SECONDS }}"{% endif %}{% if session.get('user') and live_device_status|default(false) %} data-device-status-url="{{ url_for('views.device_status') }}" data-device-status-every="{{ cfg.HOST_METRICS_REFRESH_SECONDS }}"{% endif %}>
+{% if session.get('user') %}
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">{{ icon('activity', 18) }}</span>
+      <div><div class="brand-name"><b>TSH</b> MONITOR</div><div class="brand-sub">Hardware &amp; Security</div></div>
+    </div>
+
+    <div class="nav-label">Workspace</div>
+    <nav class="nav" aria-label="Main">
+      {% set items = [
+        ('overview', 'Overview', 'views.overview', 'grid'),
+        ('servers', 'Servers', 'views.servers', 'server'),
+        ('network', 'Network', 'views.network', 'globe'),
+        ('threats', 'Threats', 'views.threats', 'shield'),
+        ('alerts', 'Alerts', 'views.alerts', 'bell'),
+        ('maintenance', 'Maintenance', 'views.maintenance', 'clock'),
+        ('handover', 'Shift handover', 'views.handover', 'activity'),
+        ('logs', 'Logs', 'views.logs', 'activity'),
+        ('settings', 'Settings', 'views.settings', 'sliders') ] %}
+      {% if is_admin %}{% set items = items + [('users', 'Users', 'users.index', 'users')] %}{% endif %}
+      {% for key, label, endpoint, ico in items %}
+      <a class="nav-link {{ 'active' if active == key }}" href="{{ url_for(endpoint) }}" {% if active == key %}aria-current="page"{% endif %}>
+        {{ icon(ico, 17) }}<span>{{ label }}</span>
+        {% if key == 'alerts' and open_alert_count %}<span class="nav-badge" title="{{ open_alert_count }} open">{{ open_alert_count }}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="workspace-card">
+        {{ icon('shield', 18) }}
+        <div><b>Monitoring workspace</b><span>{{ 'Demo environment' if demo_mode else 'Live environment' }}</span></div>
+      </div>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button type="submit" class="nav-link logout">{{ icon('logout', 17) }}<span>Log out</span></button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs"><span>Workspace</span>{{ icon('chevron', 12) }}<b>{{ crumb|default('') }}</b></div>
+      <div class="topbar-right">
+        {% if demo_mode %}<span class="demo-pill"><span class="dot"></span>Demo mode</span>{% endif %}
+        <button type="button" class="icon-btn" data-sound-toggle aria-pressed="false" title="Alert sound: off" aria-label="Alert sound: off">{{ icon('mute', 17) }}</button>
+        <button type="button" class="icon-btn" data-reload title="Refresh" aria-label="Refresh page">{{ icon('refresh', 17) }}</button>
+        <a class="icon-btn" href="{{ url_for('views.alerts') }}" title="Alerts" aria-label="Alerts{{ ' (' ~ open_alert_count ~ ' open)' if open_alert_count }}">{{ icon('bell', 17) }}{% if open_alert_count %}<span class="bell-dot"></span>{% endif %}</a>
+        {% if current_user is defined and current_user %}
+        <a class="user" href="{{ url_for('users.change_password') }}" title="Change my password" style="text-decoration:none;color:inherit">
+          <span class="avatar" aria-hidden="true">{{ initials }}</span>
+          <div class="user-text"><b>{{ (current_user.full_name or current_user.username) if current_user else 'Signed in' }}</b><span>{{ role_label or workspace_name }}</span></div>
+        </a>
+        {% else %}
+        <div class="user">
+          <span class="avatar" aria-hidden="true">{{ initials }}</span>
+          <div class="user-text"><b>Signed in</b><span>{{ workspace_name }}</span></div>
+        </div>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if soc %}
+    {% set red = soc.threats or soc.switches_offline %}
+    {% set parts = [] %}
+    {% if soc.threats %}{% set _ = parts.append(soc.threats ~ (' active threat' if soc.threats == 1 else ' active threats')) %}{% endif %}
+    {% if soc.switches_offline %}{% set _ = parts.append(soc.switches_offline ~ (' switch offline' if soc.switches_offline == 1 else ' switches offline')) %}{% endif %}
+    {% if soc.ports_down %}{% set _ = parts.append(soc.ports_down ~ (' port down' if soc.ports_down == 1 else ' ports down')) %}{% endif %}
+    {% if soc.warnings %}{% set _ = parts.append(soc.warnings ~ (' warning' if soc.warnings == 1 else ' warnings')) %}{% endif %}
+    {% if soc.collector in ('never', 'stale') %}{% set _ = parts.append('live switch monitoring is not running') %}{% endif %}
+    {% if parts %}
+    <div class="soc-bar {{ 'soc-bar-red' if red else 'soc-bar-amber' }}" id="soc-bar" role="{{ 'alert' if red else 'status' }}">
+      {{ icon('alert', 17) }}
+      <span><b>SOC ALERT</b> &nbsp;{{ parts|join(' · ') }}</span>
+      <a href="{{ url_for('switches.index') }}">Switch monitor</a>
+      <a href="{{ url_for('views.alerts') }}">All alerts</a>
+    </div>
+    {% endif %}
+    {% endif %}
+    <div class="toast-host" id="toast-host" role="region" aria-label="New alerts" aria-live="assertive"></div>
+
+    <main class="content" id="main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}<div class="flash flash-{{ cat }}" role="{{ 'alert' if cat == 'error' else 'status' }}">{{ msg }}</div>{% endfor %}
+      {% endwith %}
+      <noscript><div class="flash flash-error">JavaScript is off. Auto refresh and search filters will not work.</div></noscript>
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      <span>TSH Hardware Monitor <i class="sep"></i> Hotel IT Operations</span>
+      <span class="footer-right">{{ 'Demo environment · Not connected to live monitoring' if demo_mode else 'Live environment' }}</span>
+    </footer>
+  </div>
+</div>
+{% else %}
+  {% block bare %}{% endblock %}
+{% endif %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

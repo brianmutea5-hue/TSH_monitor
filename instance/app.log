@@ -1,0 +1,289 @@
+2026-11-13 13:08:24,578 WARNING SECRET_KEY is not set in .env - everyone is signed out each time the app restarts.
+2026-11-13 13:08:24,620 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-13 13:08:59,583 WARNING Failed sign-in for 'admin' from 127.0.0.1
+2026-11-13 13:15:41,753 WARNING SECRET_KEY is not set in .env - everyone is signed out each time the app restarts.
+2026-11-13 13:15:41,774 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-13 13:16:07,210 WARNING Failed sign-in for 'admin' from 127.0.0.1
+2026-11-13 13:16:41,328 WARNING Failed sign-in for 'admin' from 127.0.0.1
+2026-11-13 14:11:32,213 WARNING Failed sign-in for 'admin' from 127.0.0.1
+2026-11-13 14:11:59,045 WARNING SECRET_KEY is not set in .env - everyone is signed out each time the app restarts.
+2026-11-13 14:11:59,064 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-13 14:12:27,780 WARNING Failed sign-in for 'admin' from 127.0.0.1
+2026-11-13 14:16:32,600 WARNING SECRET_KEY is not set in .env - everyone is signed out each time the app restarts.
+2026-11-13 14:16:32,619 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-13 14:16:54,618 WARNING Failed sign-in for 'admin' from 127.0.0.1
+2026-11-13 14:22:14,078 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-13 14:22:39,630 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-13 14:23:01,247 INFO Admin signed in from 127.0.0.1
+2026-11-13 14:25:09,789 INFO Admin signed in from 127.0.0.1
+2026-11-14 13:06:40,605 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-14 13:07:41,726 INFO Admin signed in from 127.0.0.1
+2026-11-14 13:08:54,357 ERROR Unhandled error on GET /network
+Traceback (most recent call last):
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 98, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 163, in network
+    return render_template("network.html", active="network", crumb="Network", devices=devices)
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 66, in get_source
+    return self._get_source_fast(environment, template)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 100, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: network.html
+2026-11-14 13:09:03,233 ERROR Unhandled error on GET /network
+Traceback (most recent call last):
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 98, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 163, in network
+    return render_template("network.html", active="network", crumb="Network", devices=devices)
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 66, in get_source
+    return self._get_source_fast(environment, template)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 100, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: network.html
+2026-11-14 13:15:47,354 ERROR Unhandled error on GET /network
+Traceback (most recent call last):
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 98, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 163, in network
+    return render_template("network.html", active="network", crumb="Network", devices=devices)
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 66, in get_source
+    return self._get_source_fast(environment, template)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 100, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: network.html
+2026-11-14 13:21:50,678 ERROR Unhandled error on GET /network
+Traceback (most recent call last):
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 98, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 163, in network
+    return render_template("network.html", active="network", crumb="Network", devices=devices)
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\jinja2\loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 66, in get_source
+    return self._get_source_fast(environment, template)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\templating.py", line 100, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: network.html
+2026-11-14 14:09:20,649 INFO Admin signed in from 127.0.0.1
+2026-11-18 13:47:26,346 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-18 13:49:36,137 INFO Admin signed in from 127.0.0.1
+2026-11-18 13:51:59,693 INFO Admin signed in from 127.0.0.1
+2026-11-19 07:21:59,646 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-19 07:22:41,690 INFO Admin signed in from 127.0.0.1
+2026-11-19 07:30:21,915 INFO Admin signed in from 127.0.0.1
+2026-11-19 09:43:35,816 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-19 09:44:46,922 INFO Admin signed in from 127.0.0.1
+2026-11-19 10:45:15,363 INFO Admin signed in from 127.0.0.1
+2026-11-19 11:10:36,313 WARNING Failed sign-in for 'admin' from 127.0.0.1
+2026-11-19 11:10:56,588 INFO Admin signed in from 127.0.0.1
+2026-11-19 11:19:28,853 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 12:49:57,265 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-19 13:15:30,823 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-19 13:16:03,027 INFO Admin signed in from 127.0.0.1
+2026-11-19 13:26:44,816 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-19 13:29:03,160 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-19 13:40:24,025 INFO Admin signed in from 127.0.0.1
+2026-11-19 13:48:58,216 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 13:57:13,057 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 13:58:32,791 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 14:18:03,683 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 14:24:36,055 INFO Admin signed in from 127.0.0.1
+2026-11-19 14:24:36,083 ERROR Unhandled error on GET /
+Traceback (most recent call last):
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 107, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 209, in overview
+    cards = _host_cards()
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 33, in _host_cards
+    hosts = query(
+        "SELECT d.*, t.last_seen AS telemetry_last_seen, t.status AS telemetry_status, "
+    ...<4 lines>...
+        "WHERE d.type = 'host' ORDER BY d.id"
+    )
+  File "C:\Users\Bmutea\TSH_monitor\database.py", line 135, in query
+    cur = get_db().execute(sql, args)
+sqlite3.OperationalError: no such column: t.status
+2026-11-19 14:24:41,120 ERROR Unhandled error on GET /
+Traceback (most recent call last):
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 107, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 209, in overview
+    cards = _host_cards()
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 33, in _host_cards
+    hosts = query(
+        "SELECT d.*, t.last_seen AS telemetry_last_seen, t.status AS telemetry_status, "
+    ...<4 lines>...
+        "WHERE d.type = 'host' ORDER BY d.id"
+    )
+  File "C:\Users\Bmutea\TSH_monitor\database.py", line 135, in query
+    cur = get_db().execute(sql, args)
+sqlite3.OperationalError: no such column: t.status
+2026-11-19 14:24:43,654 ERROR Unhandled error on GET /
+Traceback (most recent call last):
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 107, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 209, in overview
+    cards = _host_cards()
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 33, in _host_cards
+    hosts = query(
+        "SELECT d.*, t.last_seen AS telemetry_last_seen, t.status AS telemetry_status, "
+    ...<4 lines>...
+        "WHERE d.type = 'host' ORDER BY d.id"
+    )
+  File "C:\Users\Bmutea\TSH_monitor\database.py", line 135, in query
+    cur = get_db().execute(sql, args)
+sqlite3.OperationalError: no such column: t.status
+2026-11-19 14:30:50,343 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 15:01:23,397 INFO Admin signed in from 127.0.0.1
+2026-11-19 15:26:33,453 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 15:27:26,870 INFO Admin signed in from 127.0.0.1
+2026-11-19 16:14:21,239 INFO Admin signed in from 127.0.0.1
+2026-11-19 16:49:29,131 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 16:49:41,828 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-19 16:50:08,092 INFO Admin signed in from 127.0.0.1
+2026-11-20 09:25:50,361 INFO TSH Hardware Monitor started (simulation_mode=True)
+2026-11-20 09:26:50,022 INFO Admin signed in from 127.0.0.1
+2026-11-20 10:56:13,777 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-20 10:56:54,162 WARNING Failed sign-in for 'mutea' from 127.0.0.1
+2026-11-20 10:57:07,314 INFO admin signed in from 127.0.0.1
+2026-11-20 11:02:41,876 INFO Bmutea signed in from 127.0.0.1
+2026-11-20 11:44:30,530 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-20 11:45:03,976 INFO admin signed in from 127.0.0.1
+2026-11-20 12:25:59,551 INFO admin signed in from 127.0.0.1
+2026-11-20 12:29:01,360 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-20 12:30:41,640 ERROR Unhandled error on GET /handover
+Traceback (most recent call last):
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Bmutea\TSH_monitor\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 161, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\auth.py", line 177, in wrapped
+    return view(*args, **kwargs)
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 701, in handover
+    unhealthy = _decorate_device_rows(query(
+        "SELECT d.*, p.name AS parent_name FROM devices d "
+        "LEFT JOIN devices p ON p.id = d.parent_id ORDER BY d.name"
+    ))
+  File "C:\Users\Bmutea\TSH_monitor\views.py", line 173, in _decorate_device_rows
+    for row in query(
+               ~~~~~^
+        f"SELECT device_id, last_seen, status FROM access_point_metrics "
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        f"WHERE device_id IN ({placeholders})",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ids,
+        ^^^^
+    )
+    ^
+  File "C:\Users\Bmutea\TSH_monitor\database.py", line 187, in query
+    cur = get_db().execute(sql, args)
+sqlite3.OperationalError: no such column: status
+2026-11-20 12:35:17,617 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-20 12:54:10,810 WARNING ALERT threat: Switch unreachable on SW-B1 
+2026-11-20 13:07:02,032 WARNING Failed sign-in for 'Bmutea' from 127.0.0.1
+2026-11-20 13:07:38,908 INFO Bmutea signed in from 127.0.0.1
+2026-11-20 13:10:33,285 INFO admin signed in from 127.0.0.1
+2026-11-20 14:11:45,249 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-20 14:12:22,345 INFO admin signed in from 127.0.0.1
+2026-11-20 14:36:29,938 INFO admin signed in from 127.0.0.1
+2026-11-20 14:36:48,642 WARNING Failed sign-in for 'admin' from 127.0.0.1
+2026-11-20 14:37:01,403 INFO admin signed in from 127.0.0.1
+2026-11-23 08:29:08,116 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-23 08:30:13,833 INFO admin signed in from 127.0.0.1
+2026-11-23 09:31:30,847 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-23 09:32:04,606 INFO admin signed in from 127.0.0.1
+2026-11-23 09:32:41,834 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-24 08:41:24,266 INFO TSH Hardware Monitor started (demo_mode=True)
+2026-11-24 08:43:24,717 INFO admin signed in from 127.0.0.1

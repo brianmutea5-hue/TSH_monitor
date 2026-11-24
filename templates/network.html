@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading, device_table with context %}
+{% from 'partials/_switch_components.html' import net_tabs with context %}
+{% set autorefresh = true %}
+{% set live_device_status = true %}
+
+{% block content %}
+{{ page_heading('Network', 'Explore and manage your connected infrastructure.') }}
+{{ net_tabs('devices') }}
+
+<div class="card info-card">
+  <span class="icon-plain">{{ icon('globe', 20) }}</span>
+  <div class="info-text">
+    <b>Network inventory</b>
+    <span>Servers, core and floor switches, access points, WAN links and storage from your hardware inventory.</span>
+  </div>
+  {% if is_admin %}<a class="btn btn-dark" href="{{ url_for('views.device_new') }}">{{ icon('plus', 15) }} Add device</a>{% endif %}
+</div>
+
+<div class="card panel">
+  <div class="panel-head">
+    <div>
+      <h3>All devices <span class="count">{{ devices|length }}</span></h3>
+      <p class="section-sub">Inventory records · status unavailable without a monitoring source</p>
+    </div>
+    <div class="panel-tools">
+      {% if not demo_mode and cfg.SWITCH_MONITOR_ENABLED %}
+      <form method="post" action="{{ url_for('views.network') }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="btn" type="submit">Refresh switches</button>
+      </form>
+      {% endif %}
+      <select class="select" data-filter-select="all-table" data-key="type" aria-label="Filter by device type">
+        <option value="">All types</option>
+        <option value="host">Physical hosts</option>
+        <option value="vm">Virtual machines</option>
+        <option value="server">Servers</option>
+        <option value="storage">Storage / NAS</option>
+        <option value="switch">Switches</option>
+        <option value="access_point">Access points</option>
+        <option value="wan_link">WAN links</option>
+      </select>
+      <label class="search">{{ icon('search', 15) }}<input type="search" placeholder="Search devices..." aria-label="Search devices" data-filter="all-table"></label>
+    </div>
+  </div>
+  {{ device_table(devices, 'all-table') }}
+</div>
+{% endblock %}

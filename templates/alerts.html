@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% from 'partials/_components.html' import page_heading, alert_item with context %}
+{% set autorefresh = true %}
+
+{% block content %}
+{{ page_heading('Alerts', 'Keep track of events across your infrastructure.') }}
+
+<div class="card panel panel-first">
+  <div class="panel-head">
+    <div>
+      <h3>All alerts <span class="count">{{ alerts|length }}</span></h3>
+      <p class="section-sub">{{ 'These example events are simulated, not live detections.' if simulation_mode else 'Hardware warnings and security threats.' }}</p>
+    </div>
+    <form method="get"><select name="status" class="select" data-autosubmit aria-label="Filter by status">
+      <option value="all" {{ 'selected' if status == 'all' }}>All statuses</option>
+      <option value="open" {{ 'selected' if status == 'open' }}>Open</option>
+      <option value="acknowledged" {{ 'selected' if status == 'acknowledged' }}>Acknowledged</option>
+      <option value="resolved" {{ 'selected' if status == 'resolved' }}>Resolved</option>
+    </select></form>
+  </div>
+  {% for a in alerts %}{{ alert_item(a, url_for('views.alerts')) }}{% else %}<div class="empty-row">No alerts match this filter.</div>{% endfor %}
+</div>
+
+<div class="card panel" aria-label="Vendor escalation contacts">
+  <div class="panel-head">
+    <div>
+      <h3>Vendor escalation contacts</h3>
+      <p class="section-sub">Use for ISP service-impacting incidents.</p>
+    </div>
+  </div>
+  <div class="cell-title">Airtel business support</div>
+  <a class="link-strong" href="mailto:Businesssupport@ke.airtel.com">Businesssupport@ke.airtel.com</a>
+</div>
+{% endblock %}

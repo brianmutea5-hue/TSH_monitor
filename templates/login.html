@@ -1,0 +1,63 @@
+{% from 'partials/_icons.html' import icon %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181b1c">
+  <title>Sign in · TSH Hardware Monitor</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23181b1c'/%3E%3Cpath d='M6 17h5l3-8 4 14 3-6h5' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+<div class="login">
+  <aside class="login-side">
+    <div class="brand">
+      <span class="brand-mark">{{ icon('activity', 18) }}</span>
+      <div><div class="brand-name"><b>TSH</b> MONITOR</div><div class="brand-sub">Hardware &amp; Security</div></div>
+    </div>
+    <div class="login-side-copy">
+      <h2>Know the moment a server fails.</h2>
+      <p>Hardware health and network threats for your hotel's servers, in one place.</p>
+      <ul class="legend">
+        <li><span class="dot dot-green"></span> Green &mdash; working well</li>
+        <li><span class="dot dot-amber"></span> Amber &mdash; needs attention</li>
+        <li><span class="dot dot-red"></span> Red &mdash; failure or threat</li>
+      </ul>
+    </div>
+    <div class="login-side-foot">Hotel IT Operations</div>
+  </aside>
+
+  <main class="login-main">
+    <form class="login-card" method="post" autocomplete="off">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <span class="icon-box">{{ icon('lock', 18) }}</span>
+      <h1>Sign in</h1>
+      <p class="subtitle">Authorised hotel IT staff only. Your role decides what you can change.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}<div class="flash flash-{{ cat }}" role="{{ 'alert' if cat == 'error' else 'status' }}">{{ msg }}</div>{% endfor %}
+      {% endwith %}
+
+      <label class="field">
+        <span>Username</span>
+        <input type="text" name="username" required autofocus autocomplete="username" {{ 'disabled' if locked }}>
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <div class="password-wrap">
+          <input type="password" name="password" id="password" required autocomplete="current-password" {{ 'disabled' if locked }}>
+          <button type="button" class="toggle-pass" data-toggle-password aria-label="Show or hide password">Show</button>
+        </div>
+      </label>
+      <button class="btn btn-dark btn-block" type="submit" {{ 'disabled' if locked }}>Sign in</button>
+      <p class="login-note">Sessions end after 15 minutes of inactivity. {{ cfg.MAX_LOGIN_ATTEMPTS }} wrong attempts lock sign-in for {{ cfg.LOCKOUT_MINUTES }} minutes.</p>
+    </form>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

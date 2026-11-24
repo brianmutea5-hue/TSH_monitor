@@ -1,0 +1,130 @@
+{# Reusable pieces: page heading, status pill, legend, host card, device table, alert row #}
+{% from 'partials/_icons.html' import icon %}
+
+{% macro page_heading(title, subtitle) %}
+<div class="page-heading">
+  <div>
+    <div class="eyebrow"><span class="eyebrow-dot"></span>Hotel IT Operations</div>
+    <h1>{{ title }}</h1>
+    <p class="subtitle">{{ subtitle }}</p>
+  </div>
+  <div class="page-heading-actions">
+    <span class="refreshed">{{ icon('clock', 13) }} {{ 'Demo refreshed' if demo_mode else 'Refreshed' }} {{ now }}</span>
+    <button type="button" class="btn" data-reload>{{ icon('refresh', 14) }} Refresh</button>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro pill(state) %}
+{%- set labels = {'healthy': 'Healthy', 'threat': 'Threat', 'down': 'Down', 'warning': 'Warning', 'unknown': 'Unknown'} -%}
+<span class="pill pill-{{ state }}"><span class="dot"></span>{{ labels.get(state, state|capitalize) }}</span>
+{% endmacro %}
+
+{# Colour key: green = working well, amber = warning, red = failure or threat #}
+{% macro legend() %}
+<div class="legend-inline" aria-label="Status colour key">
+  <span><i class="dot dot-green"></i> Green: working well</span>
+  <span><i class="dot dot-amber"></i> Amber: warning, needs attention</span>
+  <span><i class="dot dot-red"></i> Red: failure or threat</span>
+</div>
+{% endmacro %}
+
+{% macro metric(label, key, value, warn_at=85, threat_at=98) %}
+<div class="metric">
+  <div class="metric-row"><span>{{ label }}</span><span data-host-metric="{{ key }}">{% if value is not none %}{{ value|round|int }}%{% else %}Unknown{% endif %}</span></div>
+  <div class="bar" role="progressbar" aria-label="{{ label }} usage" aria-valuemin="0" aria-valuemax="100"
+       aria-valuetext="{{ (value|round|int ~ ' percent') if value is not none else 'Unknown' }}"
+       {% if value is not none %}aria-valuenow="{{ value }}"{% endif %}
+       data-host-progress="{{ key }}" data-warn-at="{{ warn_at }}" data-threat-at="{{ threat_at }}">
+    <div class="bar-fill {{ 'bar-threat' if value is not none and value >= threat_at else ('bar-warn' if value is not none and value >= warn_at else '') }}"
+         data-host-metric-bar="{{ key }}" style="width: {{ value if value is not none else 0 }}%"></div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro host_card(h) %}
+<a class="card host-card" href="{{ url_for('views.servers') }}#host-{{ h.id }}" id="host-{{ h.id }}" data-host-card="{{ h.id }}" aria-label="{{ h.name }}, {{ h.state }}">
+  <div class="host-top">
+    <span class="icon-box">{{ icon('server', 18) }}</span>
+    <span class="host-top-right"><span class="pill pill-{{ h.state }}" data-host-state><span class="dot"></span><span data-host-state-label>{{ h.state|capitalize }}</span></span>{{ icon('chevron', 15, 'muted') }}</span>
+  </div>
+  <div class="host-name">{{ h.name }}</div>
+  <div class="host-ip mono">{{ h.ip or 'Not set' }}</div>
+  <div class="cell-sub" data-host-last-checked>
+    {{ h.last_check_label }}
+  </div>
+  <div class="metrics">
+    {{ metric('CPU', 'cpu', h.cpu, cfg.CPU_WARN, cfg.CPU_THREAT|default(95)) }}
+    {{ metric('Memory', 'memory', h.memory, cfg.MEMORY_WARN, cfg.MEMORY_THREAT|default(98)) }}
+    {{ metric('Disk', 'disk', h.disk, cfg.DISK_WARN, cfg.DISK_THREAT|default(98)) }}
+  </div>
+  <div class="host-foot">
+    <span title="Temperature">{{ icon('thermo', 14) }} {{ (h.temp|string ~ '°C') if h.temp is not none else 'Unknown' }}</span>
+    <span title="Uptime">{{ icon('clock', 14) }} {{ h.uptime_hours|uptime }}</span>
+    <span title="Virtual machines">{{ icon('monitor', 14) }} {{ h.vm_count }} VMs</span>
+  </div>
+</a>
+{% endmacro %}
+
+{% macro device_table(rows, table_id) %}
+<table class="table" id="{{ table_id }}">
+  <thead>
+    <tr><th>Device</th><th>Role</th><th>IP address</th><th>Parent</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr>
+  </thead>
+  <tbody>
+    {% for d in rows %}
+    <tr data-device-id="{{ d.id }}" data-search="{{ (d.name ~ ' ' ~ d.role ~ ' ' ~ (d.ip or '') ~ ' ' ~ (d.parent_name or ''))|lower }}"
+        data-type="{{ d.type }}" data-parent="{{ d.parent_name or '' }}">
+      <td>
+        <div class="cell-title">{{ d.name }}</div><div class="cell-sub">{{ d.type|capitalize }}</div>
+        {% if d.type == 'access_point' %}
+        <div class="cell-sub" data-ap-kpis>
+          Clients <span data-ap-metric="connected_clients">{{ d.connected_clients if d.connected_clients is not none else '—' }}</span> ·
+          Channel <span data-ap-metric="channel_utilization">{{ (d.channel_utilization|string ~ '%') if d.channel_utilization is not none else '—' }}</span> ·
+          RSSI <span data-ap-metric="avg_rssi">{{ (d.avg_rssi|string ~ ' dBm') if d.avg_rssi is not none else '—' }}</span> ·
+          DNS <span data-ap-metric="dns_latency_ms">{{ (d.dns_latency_ms|string ~ ' ms') if d.dns_latency_ms is not none else '—' }}</span> ·
+          DHCP <span data-ap-metric="dhcp_latency_ms">{{ (d.dhcp_latency_ms|string ~ ' ms') if d.dhcp_latency_ms is not none else '—' }}</span>
+        </div>
+        {% endif %}
+      </td>
+      <td>{{ d.role or '—' }}</td>
+      <td class="mono {{ 'faint' if not d.ip }}">{{ d.ip or 'Not set' }}</td>
+      <td>{{ d.parent_name or '—' }}</td>
+      <td><span class="pill pill-{{ d.status }}" data-device-status><span class="dot"></span><span data-device-status-label>{{ d.status|capitalize }}</span></span>
+        <span class="cell-sub" data-device-last-checked>{{ d.last_check_label or 'Waiting for first check' }}</span>
+      </td>
+      <td class="right">{% if is_admin %}<a class="link-strong" href="{{ url_for('views.device_edit', device_id=d.id) }}" aria-label="Edit {{ d.name }}">Edit</a>{% endif %}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="empty-row">No devices yet.</td></tr>
+    {% endfor %}
+    <tr class="no-results" hidden><td colspan="6" class="empty-row">No devices match your search or filter.</td></tr>
+  </tbody>
+</table>
+{% endmacro %}
+
+{% macro alert_item(a, back) %}
+<div class="alert-item">
+  <span class="alert-icon alert-icon-{{ a.severity }}">{{ icon('alert', 18) }}</span>
+  <div class="alert-body">
+    <div class="alert-title">{{ a.title }} <span class="badge badge-{{ a.severity }}"><span class="dot"></span>{{ a.severity|capitalize }}</span></div>
+    <div class="alert-msg">{{ a.device_name }} · {{ a.message }}</div>
+    <div class="alert-rec">Recommended: {{ a.recommendation }}</div>
+    <div class="alert-time">{{ icon('clock', 12) }} Raised {{ a.created_at }}</div>
+  </div>
+  <div class="alert-actions">
+    <span class="alert-status">{{ a.status|capitalize }}</span>
+    {% if a.status == 'open' %}
+    <form method="post" action="{{ url_for('views.alert_action', alert_id=a.id, action='acknowledge') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ back }}">
+      <button class="btn" type="submit">Acknowledge</button>
+    </form>
+    {% elif a.status == 'acknowledged' %}
+    <form method="post" action="{{ url_for('views.alert_action', alert_id=a.id, action='resolve') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="back" value="{{ back }}">
+      <button class="btn" type="submit">Resolve</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}

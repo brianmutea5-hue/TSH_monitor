@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading with context %}
+
+{% block content %}
+{{ page_heading('Users', 'Who can sign in to TSH Monitor, and what each person is allowed to do.') }}
+
+<div class="stats">
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Total users</span><span class="icon-box icon-box-sm">{{ icon('users', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(tiles.total) }}</div>
+    <div class="stat-sub"><span class="dot dot-green"></span>{{ tiles.active }} active</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Administrators</span><span class="icon-box icon-box-sm">{{ icon('shield', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(tiles.admins) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-green' if tiles.admins >= 2 else 'dot-amber' }}"></span>{{ 'Full control' if tiles.admins >= 2 else 'Add a second one as a back-up' }}</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Supervisors</span><span class="icon-box icon-box-sm">{{ icon('monitor', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(tiles.supervisors) }}</div>
+    <div class="stat-sub"><span class="dot dot-green"></span>Watch and acknowledge alerts</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Disabled</span><span class="icon-box icon-box-sm icon-box-amber">{{ icon('lock', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(tiles.disabled) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-amber' if tiles.disabled else 'dot-green' }}"></span>{{ 'Cannot sign in' if tiles.disabled else 'None disabled' }}</div>
+  </div>
+</div>
+
+<div class="card panel">
+  <div class="panel-head">
+    <div><h3>Accounts <span class="count">{{ people|length }}</span></h3><p class="section-sub">Click Manage to change a role, reset a password, disable or delete.</p></div>
+    <div class="panel-tools"><a class="btn btn-dark" href="{{ url_for('users.new') }}">{{ icon('plus', 15) }} Add user</a></div>
+  </div>
+  <table class="table" id="user-table">
+    <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last sign-in</th><th>Created</th><th><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+      {% for p in people %}
+      <tr class="{{ '' if p.is_active else 'row-muted' }}">
+        <td><div class="user-cell"><span class="avatar-sm {{ '' if p.is_active else 'off' }}" aria-hidden="true">{{ ((p.full_name or p.username)[:2])|upper }}</span>
+          <div><div class="cell-title">{{ p.full_name or p.username }}{% if p.id == me.id %} <span class="pill pill-unknown">You</span>{% endif %}</div><div class="cell-sub mono">{{ p.username }}</div></div></div></td>
+        <td><span class="pill {{ 'pill-admin' if p.role == 'admin' else 'pill-super' }}">{{ roles.get(p.role, p.role) }}</span></td>
+        <td>{% if not p.is_active %}<span class="pill pill-down"><span class="dot"></span>Disabled</span>{% elif p.must_change_password %}<span class="pill pill-warning"><span class="dot"></span>Must change password</span>{% else %}<span class="pill pill-healthy"><span class="dot"></span>Active</span>{% endif %}</td>
+        <td class="mono">{{ p.last_login_at or 'Never' }}</td>
+        <td class="mono">{{ p.created_at[:10] }}{% if p.created_by %}<div class="cell-sub">by {{ p.created_by }}</div>{% endif %}</td>
+        <td class="right"><a class="btn btn-sm" href="{{ url_for('users.detail', user_id=p.id) }}" aria-label="Manage {{ p.username }}">Manage</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card panel">
+  <div class="panel-head"><div><h3>What each role can do</h3><p class="section-sub">Rules are enforced on the server, not only hidden on the screen.</p></div></div>
+  <table class="table matrix">
+    <thead><tr><th>Action</th><th>Administrator</th><th>Supervisor</th></tr></thead>
+    <tbody>
+      {% for label, a, s in [
+        ('View dashboards, servers, switches, threats, alerts and logs', true, true),
+        ('Acknowledge and resolve alerts', true, true),
+        ('Change own password', true, true),
+        ('Add, edit or remove devices', true, false),
+        ('Edit switch details and which ports are watched', true, false),
+        ('Add users, change roles, reset passwords, disable or delete', true, false),
+        ('See sign-in activity', true, false)] %}
+      <tr><td>{{ label }}</td>
+        <td>{% if a %}<span class="pill pill-healthy"><span class="dot"></span>Yes</span>{% else %}<span class="pill pill-unknown">No</span>{% endif %}</td>
+        <td>{% if s %}<span class="pill pill-healthy"><span class="dot"></span>Yes</span>{% else %}<span class="pill pill-unknown">No</span>{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card panel">
+  <div class="panel-head">
+    <div><h3>Sign-in activity <span class="count">{{ events|length }}</span></h3><p class="section-sub">Successful and failed sign-ins, lock-outs and password changes. Newest first.</p></div>
+    <div class="panel-tools">
+      <select class="select" data-filter-select="event-table" data-key="outcome" aria-label="Filter by outcome">
+        <option value="">All outcomes</option>
+        <option value="success">Signed in</option><option value="failed">Failed</option><option value="locked">Locked out</option>
+        <option value="disabled">Disabled account</option><option value="password">Password changed</option><option value="logout">Signed out</option>
+      </select>
+      <label class="search">{{ icon('search', 15) }}<input type="search" placeholder="Search activity..." aria-label="Search sign-in activity" data-filter="event-table"></label>
+    </div>
+  </div>
+  <table class="table" id="event-table">
+    <thead><tr><th>Time</th><th>User</th><th>Outcome</th><th>From</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr data-search="{{ (e.ts ~ ' ' ~ e.username ~ ' ' ~ e.outcome ~ ' ' ~ e.ip ~ ' ' ~ e.detail)|lower }}" data-outcome="{{ e.outcome }}">
+        <td class="mono">{{ e.ts }}</td><td>{{ e.username or '—' }}</td>
+        <td><span class="pill {{ 'pill-down' if e.outcome in ('failed', 'locked', 'disabled') else ('pill-healthy' if e.outcome == 'success' else 'pill-unknown') }}">{{ {'success': 'signed in', 'failed': 'failed', 'locked': 'locked out', 'disabled': 'disabled account', 'password': 'password changed', 'logout': 'signed out'}.get(e.outcome, e.outcome) }}</span></td>
+        <td class="mono">{{ e.ip or '—' }}</td><td>{{ e.detail }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="empty-row">No sign-ins recorded yet.</td></tr>
+      {% endfor %}
+      <tr class="no-results" hidden><td colspan="5" class="empty-row">No activity matches your search or filter.</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

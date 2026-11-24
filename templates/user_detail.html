@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+
+{% block content %}
+{% set is_me = person.id == me.id %}
+<div class="page-heading">
+  <div>
+    <div class="eyebrow"><span class="eyebrow-dot"></span>Hotel IT Operations</div>
+    <h1>{{ person.full_name or person.username }}{% if is_me %} <span class="pill pill-unknown">You</span>{% endif %}</h1>
+    <p class="subtitle"><span class="mono">{{ person.username }}</span> · {{ roles.get(person.role, person.role) }} · {{ 'Active' if person.is_active else 'Disabled' }} · Last sign-in {{ person.last_login_at or 'never' }}</p>
+  </div>
+  <a class="btn" href="{{ url_for('users.index') }}">Back to users</a>
+</div>
+
+<div class="detail-grid">
+  <form class="card form-card" method="post" action="{{ url_for('users.profile', user_id=person.id) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h3 style="margin:0 0 16px">Name and role</h3>
+    <label class="field"><span>Full name</span><input type="text" name="full_name" maxlength="80" required value="{{ person.full_name }}"></label>
+    <div class="field" style="margin-top:16px"><span>Role</span>
+      <div class="role-choice">
+        {% for key, label in roles.items() %}
+        <label class="role-option"><input type="radio" name="role" value="{{ key }}" {{ 'checked' if person.role == key }}>
+          <div><b>{{ label }}</b><span>{{ role_help[key] }}</span></div></label>
+        {% endfor %}
+      </div>
+      {% if is_me or last_admin %}<small class="help">{{ 'You cannot remove your own Administrator role.' if is_me else 'This is the only active Administrator, so the role cannot be lowered.' }}</small>{% endif %}
+    </div>
+    <div class="form-actions"><button class="btn btn-dark" type="submit">Save</button></div>
+  </form>
+
+  <div>
+    <form class="card form-card" method="post" action="{{ url_for('users.reset', user_id=person.id) }}" data-confirm="Reset the password for {{ person.username }}? They will be signed out everywhere.">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <h3 style="margin:0 0 6px">Reset password</h3>
+      <p class="section-sub" style="margin:0 0 14px">A new temporary password is shown to you once. The person must change it at next sign-in and is signed out everywhere now.</p>
+      <label class="field"><span>New temporary password <small>(optional)</small></span><input type="text" name="password" autocomplete="off" spellcheck="false" placeholder="Leave empty to generate one"></label>
+      <div class="form-actions"><button class="btn" type="submit">{{ icon('key', 14) }} Reset password</button></div>
+    </form>
+
+    <form class="danger-zone" method="post" action="{{ url_for('users.toggle', user_id=person.id) }}" data-confirm="{{ ('Disable ' ~ person.username ~ '? They are signed out immediately.') if person.is_active else ('Enable ' ~ person.username ~ '?') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div><b>{{ 'Disable account' if person.is_active else 'Enable account' }}</b><span>{{ 'They are signed out at once and cannot sign in. History is kept.' if person.is_active else 'They can sign in again with their current password.' }}</span></div>
+      <button class="btn {{ 'btn-danger' if person.is_active }}" type="submit" {{ 'disabled' if is_me and person.is_active }}>{{ 'Disable' if person.is_active else 'Enable' }}</button>
+    </form>
+
+    <form class="danger-zone" method="post" action="{{ url_for('users.delete', user_id=person.id) }}" data-confirm="Delete {{ person.username }} permanently? This cannot be undone.">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div><b>Delete account</b><span>Removes the account for good. Past log entries keep the name.</span></div>
+      <button class="btn btn-danger" type="submit" {{ 'disabled' if is_me }}>Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="card panel">
+  <div class="panel-head"><div><h3>Recent sign-in activity <span class="count">{{ events|length }}</span></h3><p class="section-sub">For {{ person.username }}. Account created {{ person.created_at }}{% if person.created_by %} by {{ person.created_by }}{% endif %}.</p></div></div>
+  <table class="table">
+    <thead><tr><th>Time</th><th>Outcome</th><th>From</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr><td class="mono">{{ e.ts }}</td>
+        <td><span class="pill {{ 'pill-down' if e.outcome in ('failed', 'locked', 'disabled') else ('pill-healthy' if e.outcome == 'success' else 'pill-unknown') }}">{{ e.outcome }}</span></td>
+        <td class="mono">{{ e.ip or '—' }}</td><td>{{ e.detail }}</td></tr>
+      {% else %}<tr><td colspan="4" class="empty-row">No activity recorded for this user yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

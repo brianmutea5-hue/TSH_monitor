@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+
+{% block content %}
+<div class="page-heading">
+  <div>
+    <div class="eyebrow"><span class="eyebrow-dot"></span>Hotel IT Operations</div>
+    <h1>Add user</h1>
+    <p class="subtitle">The person must choose their own password the first time they sign in.</p>
+  </div>
+  <a class="btn" href="{{ url_for('users.index') }}">Back to users</a>
+</div>
+
+<form class="card form-card" method="post" autocomplete="off">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <div class="form-grid">
+    <label class="field"><span>Full name <i class="req">*</i></span>
+      <input type="text" name="full_name" maxlength="80" required value="{{ values.get('full_name', '') }}" placeholder="e.g. Jane Wanjiru">
+      <small class="help">Shown in the top bar and in logs.</small></label>
+    <label class="field"><span>Username <i class="req">*</i></span>
+      <input type="text" name="username" maxlength="32" required value="{{ values.get('username', '') }}" placeholder="e.g. jwanjiru" autocapitalize="off" spellcheck="false">
+      <small class="help">3-32 characters: letters, numbers, dot, dash, underscore.</small></label>
+    <div class="field" style="grid-column: 1 / -1;">
+      <span>Role <i class="req">*</i></span>
+      <div class="role-choice">
+        {% for key, label in roles.items() %}
+        <label class="role-option"><input type="radio" name="role" value="{{ key }}" {{ 'checked' if values.get('role') == key }} required>
+          <div><b>{{ label }}</b><span>{{ role_help[key] }}</span></div></label>
+        {% endfor %}
+      </div>
+    </div>
+    <label class="field" style="grid-column: 1 / -1;"><span>Starting password <small>(optional)</small></span>
+      <input type="text" name="password" autocomplete="off" spellcheck="false" placeholder="Leave empty to generate a strong one">
+      <small class="help">At least 12 characters with letters and numbers. You will see it once, then pass it to the person safely.</small></label>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-dark" type="submit">Create user</button>
+    <a class="btn" href="{{ url_for('users.index') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card empty-state">
+  <b>{{ err.code }} · {{ err.name }}</b>
+  <span>{{ err.description }}</span>
+  <a class="btn btn-dark" href="{{ url_for('views.overview') }}">Back to overview</a>
+</div>
+{% endblock %}
+{% block bare %}
+<div class="login-main"><div class="login-card">
+  <h1>{{ err.code }} · {{ err.name }}</h1>
+  <p class="subtitle">{{ err.description }}</p>
+  <a class="btn btn-dark" href="{{ url_for('auth.login') }}">Go to sign in</a>
+</div></div>
+{% endblock %}

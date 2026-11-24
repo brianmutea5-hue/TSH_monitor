@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+
+{% block content %}
+<div class="page-heading">
+  <div>
+    <div class="eyebrow"><span class="eyebrow-dot"></span>Hotel IT Operations</div>
+    <h1>{{ 'Add device' if is_new else 'Edit device' }}</h1>
+    <p class="subtitle">Devices appear in the Servers and Network inventories.</p>
+  </div>
+  <a class="btn" href="{{ url_for('views.network') }}">Back to network</a>
+</div>
+
+<form class="card form-card" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <div class="form-grid">
+    <label class="field"><span>Name <i class="req">*</i></span>
+      <input type="text" name="name" maxlength="100" required value="{{ device.get('name', '') }}" placeholder="e.g. TSHSSVS3">
+      <small class="help">Must be unique. Use the server's host name.</small></label>
+    <label class="field"><span>Role</span>
+      <input type="text" name="role" maxlength="150" value="{{ device.get('role', '') }}" placeholder="e.g. Sunsystems">
+      <small class="help">What the device is used for.</small></label>
+    <label class="field"><span>IP address</span>
+      <input type="text" name="ip" value="{{ device.get('ip') or '' }}" placeholder="192.168.8.101" inputmode="decimal">
+      <small class="help">Leave empty if not known yet.</small></label>
+    <label class="field"><span>Type</span>
+      <select name="type" class="select select-full" data-type-select>
+        {% for value, label in types %}<option value="{{ value }}" {{ 'selected' if device.get('type', 'vm') == value }}>{{ label }}</option>{% endfor %}
+      </select>
+      <small class="help">Physical hosts show as large cards on the Servers page.</small></label>
+    <label class="field"><span>Parent host</span>
+      <select name="parent_id" class="select select-full" data-parent-select>
+        <option value="">None</option>
+        {% for h in hosts %}<option value="{{ h.id }}" {{ 'selected' if device.get('parent_id')|string == h.id|string }}>{{ h.name }}</option>{% endfor %}
+      </select>
+      <small class="help">Only used for virtual machines.</small></label>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-dark" type="submit">{{ 'Add device' if is_new else 'Save changes' }}</button>
+    <a class="btn" href="{{ url_for('views.network') }}">Cancel</a>
+  </div>
+</form>
+
+{% if not is_new %}
+<form class="danger-zone" method="post" action="{{ url_for('views.device_delete', device_id=device_id) }}" data-confirm="Remove this device from the inventory? This cannot be undone.">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <div><b>Remove device</b><span>Deletes this record from the inventory. This cannot be undone.</span></div>
+  <button class="btn btn-danger" type="submit">Remove</button>
+</form>
+{% endif %}
+{% endblock %}

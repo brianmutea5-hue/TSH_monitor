@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading with context %}
+{% from 'partials/_switch_components.html' import net_tabs, sw_pill, port_strip, port_key with context %}
+{% set autorefresh = true %}
+
+{% block content %}
+{{ page_heading('Network', 'Explore and manage your connected infrastructure.') }}
+{{ net_tabs('switches') }}
+
+{% if simulation_mode %}
+<div class="card info-card info-card-tight">
+  <span class="icon-plain">{{ icon('flask', 20) }}</span>
+  <div class="info-text"><b>Simulated switch data</b><span>These port states are simulated. Open any switch and use the test panel to see how the SOC is alerted. Disable simulation in .env and run collector.py to show live switch data.</span></div>
+</div>
+{% elif soc.collector == 'never' %}
+<div class="banner banner-amber" role="status">
+  <span class="banner-icon">{{ icon('alert', 22) }}</span>
+  <div class="banner-text"><div class="banner-title">COLLECTOR HAS NOT STARTED</div>
+    <div class="banner-sub">Ports show "not read yet" until you run <span class="mono">python collector.py</span> in a second terminal.</div></div>
+</div>
+{% elif soc.collector == 'stale' %}
+<div class="banner banner-red" role="alert">
+  <span class="banner-icon">{{ icon('alert', 22) }}</span>
+  <div class="banner-text"><div class="banner-title">SWITCH DATA IS OUT OF DATE</div>
+    <div class="banner-sub">The collector last checked {{ soc.collector_age }} seconds ago. Port faults will not be reported until it is running again.</div></div>
+</div>
+{% endif %}
+
+<div class="stats">
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Switches online</span><span class="icon-box icon-box-sm">{{ icon('network', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(tiles.online) }}<span class="stat-of"> / {{ tiles.total }}</span></div>
+    <div class="stat-sub"><span class="dot {{ 'dot-green' if tiles.online == tiles.total else 'dot-amber' }}"></span>{{ 'All answering' if tiles.online == tiles.total else (tiles.unknown ~ ' not read yet' if tiles.unknown else 'Some not answering') }}</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Switches offline</span><span class="icon-box icon-box-sm icon-box-red">{{ icon('alert', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(tiles.offline) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-red' if tiles.offline else 'dot-green' }}"></span>{{ 'Not answering' if tiles.offline else 'None offline' }}</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Ports down</span><span class="icon-box icon-box-sm icon-box-red">{{ icon('plug', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(tiles.ports_down) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-red' if tiles.ports_down else 'dot-green' }}"></span>{{ tiles.ports_up }} of {{ tiles.ports_total }} ports up</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Switch alerts</span><span class="icon-box icon-box-sm icon-box-amber">{{ icon('bell', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(tiles.alerts) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-red' if tiles.alerts else 'dot-green' }}"></span>{{ 'Open, needs the SOC' if tiles.alerts else 'No open alerts' }}</div>
+  </div>
+</div>
+
+<div class="section-head">
+  <div>
+    <div class="section-label">By location</div>
+    <h2>Switches <span class="count">{{ tiles.total }}</span></h2>
+    <p class="section-sub">Core, floor and camera switches, grouped by where they are in the building.</p>
+  </div>
+</div>
+
+{% for g in groups %}
+<div class="card panel {{ 'panel-first' if loop.first }}">
+  <div class="panel-head">
+    <div>
+      <h3>{{ icon('network', 16, 'icon-plain') }} {{ g.location }} <span class="count">{{ g['rows']|length }}</span></h3>
+      <p class="section-sub">{{ g['rows']|map(attribute='kind_label')|unique|join(' and ') }}</p>
+    </div>
+  </div>
+  <table class="table">
+    <thead><tr><th>Switch</th><th>Model</th><th>IP address</th><th>Ports</th><th>Status</th><th><span class="sr-only">Open</span></th></tr></thead>
+    <tbody>
+      {% for i in g['rows'] %}
+      <tr>
+        <td><a class="cell-title" href="{{ url_for('switches.detail', switch_id=i.sw.id) }}">{{ i.sw.name }}</a><div class="cell-sub">{{ i.kind_label }}</div></td>
+        <td>{{ i.sw.model or '—' }}<div class="cell-sub mono">{{ i.sw.serial or 'Serial not listed' }}</div></td>
+        <td class="mono {{ 'faint' if not i.sw.ip }}">{{ i.sw.ip or 'Not set' }}</td>
+        <td>
+          {{ port_strip(i.ports) }}
+          <div class="cell-sub">
+            {% if i.total %}{{ i.up }} of {{ i.total }} up
+              {%- if i.down %} · <b class="text-red">{{ i.down }} down</b>{% endif %}
+              {%- if i.attack %} · <b class="text-red">{{ i.attack }} under attack</b>{% endif %}
+            {% else %}No ports yet{% endif %}
+          </div>
+        </td>
+        <td>{{ sw_pill(i) }}</td>
+        <td class="right"><a class="link-strong" href="{{ url_for('switches.detail', switch_id=i.sw.id) }}" aria-label="Open {{ i.sw.name }}">Open {{ icon('arrow', 14) }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+{{ port_key() }}
+
+<div class="card panel">
+  <div class="panel-head">
+    <div>
+      <h3>{{ icon('shield', 16, 'icon-plain') }} Switch threats watched <span class="count">{{ threats|length }}</span></h3>
+      <p class="section-sub">What can go wrong on a switch or a port, and how this system finds out.</p>
+    </div>
+  </div>
+  <table class="table">
+    <thead><tr><th>Threat</th><th>What it means</th><th>Rated</th><th>Found by</th></tr></thead>
+    <tbody>
+      {% for t in threats %}
+      <tr>
+        <td class="cell-title">{{ t.title }}</td>
+        <td>{{ t.meaning }}</td>
+        <td><span class="pill pill-{{ t.severity }}"><span class="dot"></span>{{ t.severity|capitalize }}</span></td>
+        <td>
+          {% if simulation_mode %}<span class="pill pill-unknown"><span class="dot"></span>Simulated</span>
+          {% elif t.how == 'poll' %}<span class="pill pill-healthy"><span class="dot"></span>Live: collector</span>
+          {% elif cfg.SYSLOG_ENABLED %}<span class="pill pill-healthy"><span class="dot"></span>Live: syslog</span>
+          {% else %}<span class="pill pill-warning"><span class="dot"></span>Needs syslog</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

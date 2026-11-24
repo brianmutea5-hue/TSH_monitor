@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading with context %}
+
+{% block content %}
+{{ page_heading('Settings', 'Configure your monitoring workspace.') }}
+
+<div class="card panel panel-first">
+  <div class="panel-head"><div><h3>Monitoring settings</h3><p class="section-sub">Current {{ 'simulation' if demo_mode else 'live' }} configuration</p></div></div>
+
+  <div class="setting-row">
+    <div><b>{{ 'Simulation mode' if demo_mode else 'Live monitoring' }}</b><span>{{ 'Resource readings and example alerts are simulated.' if demo_mode else 'Device status and telemetry are collected from configured monitoring sources.' }}</span></div>
+    {% if demo_mode %}<span class="pill pill-healthy"><span class="dot"></span>Enabled</span>{% else %}<span class="pill pill-unknown"><span class="dot"></span>Enabled</span>{% endif %}
+  </div>
+  <div class="setting-row">
+    <div><b>Data refresh</b><span>Inventory and alert records refresh automatically.</span></div>
+    {% if is_admin %}
+    <form method="post" action="{{ url_for('views.settings') }}" class="refresh-form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label class="sr-only" for="refresh-seconds">Automatic data refresh interval</label>
+      <select id="refresh-seconds" name="refresh_seconds" class="select">
+        {% for seconds, label in refresh_interval_options %}
+        <option value="{{ seconds }}" {{ 'selected' if refresh_seconds == seconds }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-sm">Save</button>
+    </form>
+    {% else %}<span class="setting-value">Read only · {{ refresh_seconds }} seconds</span>{% endif %}
+  </div>
+  <div class="setting-row">
+    <div><b>Monitoring integrations</b><span>{{ 'Configure agents, SNMP and threat sensors to receive live readings.' if demo_mode else 'Telemetry and reachability feeds are available to configured agents and monitors.' }}</span></div>
+    {% if demo_mode %}<span class="pill pill-unknown"><span class="dot"></span>Not connected</span>{% else %}<span class="pill pill-healthy"><span class="dot"></span>Live</span>{% endif %}
+  </div>
+  <div class="setting-row">
+    <div><b>Alert thresholds</b><span>CPU {{ cfg.CPU_WARN }}% · Memory {{ cfg.MEMORY_WARN }}% · Disk {{ cfg.DISK_WARN }}%{{ ' (demo display only)' if demo_mode }}</span></div>
+  </div>
+</div>
+
+<div class="card panel">
+  <div class="panel-head"><div><h3>Account and security</h3><p class="section-sub">Who is signed in and how access is protected.</p></div></div>
+  <div class="setting-row">
+    <div><b>Signed in as</b><span>{{ role_label }} account · <a class="link-strong" href="{{ url_for('users.change_password') }}">Change password</a></span></div>
+    <span class="setting-value">{{ session.get('user') }}</span>
+  </div>
+  <div class="setting-row">
+    <div><b>Session timeout</b><span>You are signed out automatically after this much inactivity.</span></div>
+    <span class="setting-value">{{ (cfg.PERMANENT_SESSION_LIFETIME.total_seconds() // 60)|int }} minutes</span>
+  </div>
+  <div class="setting-row">
+    <div><b>Sign-in protection</b><span>Sign-in is locked after repeated wrong passwords.</span></div>
+    <span class="setting-value">{{ cfg.MAX_LOGIN_ATTEMPTS }} attempts · {{ cfg.LOCKOUT_MINUTES }} min lock</span>
+  </div>
+  <div class="setting-row">
+    <div><b>Secure cookies (HTTPS)</b><span>Turn on once the site is served over HTTPS.</span></div>
+    {% if cfg.SESSION_COOKIE_SECURE %}<span class="pill pill-healthy"><span class="dot"></span>On</span>{% else %}<span class="pill pill-warning"><span class="dot"></span>Off</span>{% endif %}
+  </div>
+</div>
+
+{% if demo_mode %}
+<div class="card panel">
+  <div class="panel-head"><div><h3>Go live checklist</h3><p class="section-sub">What is needed to replace the simulated data with real readings.</p></div></div>
+  <ol class="checklist">
+    <li><b>Server agents</b><span>Install a small agent on each host to report CPU, memory, disk, temperature and fan or power status.</span></li>
+    <li><b>SNMP for switches and access points</b><span>Poll the Ruckus switches and access points for port, PoE and client status.</span></li>
+    <li><b>Threat sensor</b><span>Connect a tool such as Wazuh or Suricata to report malware, viruses, ARP spoofing and port scans.</span></li>
+    <li><b>Turn off demo mode</b><span>Set DEMO_MODE=0 in the .env file and restart the app.</span></li>
+  </ol>
+</div>
+{% endif %}
+{% endblock %}

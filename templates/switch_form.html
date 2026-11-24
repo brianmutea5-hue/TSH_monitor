@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+
+{% block content %}
+<div class="page-heading">
+  <div>
+    <div class="eyebrow"><span class="eyebrow-dot"></span>Hotel IT Operations</div>
+    <h1>Edit {{ sw.name }}</h1>
+    <p class="subtitle">Where the switch is and what it is. The name and IP address are changed from Network &gt; All devices.</p>
+  </div>
+  <a class="btn" href="{{ url_for('switches.detail', switch_id=sw.id) }}">Back to switch</a>
+</div>
+
+<form class="card form-card" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <div class="form-grid">
+    <label class="field"><span>Location <i class="req">*</i></span>
+      <input type="text" name="location" maxlength="80" required value="{{ values.get('location', '') }}" placeholder="e.g. 2nd floor">
+      <small class="help">Switches are grouped by this, so use the same words for the same place.</small></label>
+    <label class="field"><span>Model</span>
+      <input type="text" name="model" maxlength="60" value="{{ values.get('model', '') }}" placeholder="e.g. ICX 7150-48P"></label>
+    <label class="field"><span>Serial number</span>
+      <input type="text" name="serial" maxlength="40" value="{{ values.get('serial', '') }}" placeholder="e.g. FEC3228Q06H"></label>
+    <label class="field"><span>Notes</span>
+      <input type="text" name="notes" maxlength="400" value="{{ values.get('notes', '') }}" placeholder="e.g. Behind the lift lobby cabinet"></label>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-dark" type="submit">Save changes</button>
+    <a class="btn" href="{{ url_for('switches.detail', switch_id=sw.id) }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import alert_item with context %}
+{% from 'partials/_switch_components.html' import sw_pill, port_pill, port_key, faceplate with context %}
+{% set sw = item.sw %}
+
+{% block content %}
+<div class="page-heading">
+  <div>
+    <div class="eyebrow"><span class="eyebrow-dot"></span>{{ sw.location }} · {{ item.kind_label }}</div>
+    <h1>{{ sw.name }}</h1>
+    <p class="subtitle">{{ sw.model or 'Model not listed' }}{% if sw.ip %} · <span class="mono">{{ sw.ip }}</span>{% endif %}</p>
+  </div>
+  <div class="page-heading-actions">
+    {{ sw_pill(item) }}
+    {% if is_admin %}<a class="btn" href="{{ url_for('switches.edit', switch_id=sw.id) }}">Edit details</a>{% endif %}
+    <a class="btn" href="{{ url_for('switches.index') }}">Back to switches</a>
+  </div>
+</div>
+
+{% if item.health == 'maintenance' %}
+<div class="card info-card" role="status"><span class="icon-plain">{{ icon('clock', 20) }}</span>
+  <div class="info-text"><b>Maintenance window active</b><span>Polling continues, but new down and warning alerts are suppressed for this device until the window ends.</span></div>
+  {% if is_admin %}<a class="btn" href="{{ url_for('views.maintenance') }}">Manage windows</a>{% endif %}
+</div>
+{% elif item.health == 'down' %}
+<div class="banner banner-red" role="alert"><span class="banner-icon">{{ icon('alert', 22) }}</span>
+  <div class="banner-text"><div class="banner-title">SWITCH OFFLINE</div>
+  <div class="banner-sub">{{ sw.name }} is not answering. Everything plugged into it on the {{ sw.location|lower }} may have lost the network.</div></div></div>
+{% elif item.health == 'threat' %}
+<div class="banner banner-red" role="alert"><span class="banner-icon">{{ icon('shield', 22) }}</span>
+  <div class="banner-text"><div class="banner-title">SECURITY ALERT</div>
+  <div class="banner-sub">{{ item.alerts|length }} open alert{{ '' if item.alerts|length == 1 else 's' }} on this switch. Read them below.</div></div></div>
+{% elif item.health == 'warning' %}
+<div class="banner banner-amber" role="status"><span class="banner-icon">{{ icon('alert', 22) }}</span>
+  <div class="banner-text"><div class="banner-title">NEEDS ATTENTION</div>
+  <div class="banner-sub">{{ item.down }} port{{ '' if item.down == 1 else 's' }} down that should be working.</div></div></div>
+{% elif item.health == 'unknown' %}
+<div class="card info-card"><span class="icon-plain">{{ icon('clock', 20) }}</span>
+  <div class="info-text"><b>Not read yet</b><span>The collector has not checked this switch. Run <span class="mono">python collector.py</span>.</span></div></div>
+{% else %}
+<div class="banner banner-green" role="status"><span class="banner-icon">{{ icon('check', 22) }}</span>
+  <div class="banner-text"><div class="banner-title">ALL PORTS HEALTHY</div>
+  <div class="banner-sub">Every port that should be working is working.</div></div></div>
+{% endif %}
+
+<div class="stats">
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Ports up</span><span class="icon-box icon-box-sm">{{ icon('plug', 16) }}</span></div>
+    <div class="stat-value">{{ item.up }}<span class="stat-of"> / {{ item.total }}</span></div>
+    <div class="stat-sub"><span class="dot dot-green"></span>{{ item.idle }} not in use · {{ item.off }} switched off</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Ports down</span><span class="icon-box icon-box-sm icon-box-red">{{ icon('alert', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(item.down) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-red' if item.down else 'dot-green' }}"></span>{{ 'Should be working' if item.down else 'None down' }}</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Open alerts</span><span class="icon-box icon-box-sm icon-box-amber">{{ icon('bell', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(item.alerts|length) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-red' if item.alerts else 'dot-green' }}"></span>{{ 'Needs the SOC' if item.alerts else 'No open alerts' }}</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Uptime</span><span class="icon-box icon-box-sm">{{ icon('clock', 16) }}</span></div>
+    <div class="stat-value stat-value-sm">{{ (sw.uptime_seconds // 3600)|uptime if sw.uptime_seconds is not none else '—' }}</div>
+    <div class="stat-sub"><span class="dot dot-green"></span>{{ 'Last seen ' ~ sw.last_seen if sw.last_seen else 'Never seen yet' }}</div>
+  </div>
+</div>
+
+<div class="card panel">
+  <div class="panel-head">
+    <div><h3>Ports <span class="count">{{ item.total }}</span></h3>
+      <p class="section-sub">Front of the switch. Hover or focus a port for its name and status.</p></div>
+  </div>
+  {% if item.total %}{{ faceplate(item.access, item.uplinks) }}{% else %}<div class="empty-row">No ports recorded yet.</div>{% endif %}
+</div>
+{{ port_key() }}
+
+{% if item.alerts %}
+<div class="card panel">
+  <div class="panel-head"><div><h3>Open alerts <span class="count">{{ item.alerts|length }}</span></h3><p class="section-sub">Acknowledge an alert once someone is dealing with it.</p></div></div>
+  {% for a in item.alerts %}{{ alert_item(a, url_for('switches.detail', switch_id=sw.id)) }}{% endfor %}
+</div>
+{% endif %}
+
+{% if cfg.SIMULATION and is_admin %}
+<div class="card panel">
+  <div class="panel-head"><div><h3>{{ icon('flask', 16, 'icon-plain') }} Demo test panel</h3>
+    <p class="section-sub">Demo mode only. Act out a fault and watch the red bar and pop-up appear on every page.</p></div></div>
+  <form class="sim-form" method="post" action="{{ url_for('switches.simulate', switch_id=sw.id) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label class="field"><span>What happens</span>
+      <select name="action" class="select select-full">{% for value, label in simulations %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+    <label class="field"><span>Port <small class="help">optional</small></span>
+      <select name="port" class="select select-full"><option value="">Any working port</option>
+        {% for p in item.access if p.cls in ('up', 'down', 'attack') %}<option value="{{ p.label }}">{{ p.label }}</option>{% endfor %}</select></label>
+    <button class="btn btn-dark" type="submit">Run test</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="card panel">
+  <div class="panel-head">
+    <div><h3>Port list</h3><p class="section-sub">"Watch" means you are alerted when that port goes down. Ports seen working are watched automatically.</p></div>
+    <div class="panel-tools">
+      <select class="select" data-filter-select="port-table" data-key="state" aria-label="Filter by port status">
+        <option value="">All ports</option>
+        <option value="down">Down</option><option value="attack">Under attack</option><option value="up">Working</option>
+        <option value="idle">Not in use</option><option value="off">Switched off</option><option value="unknown">Not read yet</option>
+      </select>
+      <label class="search">{{ icon('search', 15) }}<input type="search" placeholder="Search ports..." aria-label="Search ports" data-filter="port-table"></label>
+    </div>
+  </div>
+  <table class="table" id="port-table">
+    <thead><tr><th>Port</th><th>Type</th><th>Name set on the switch</th><th>Link</th><th>Last change</th><th>Alerts</th></tr></thead>
+    <tbody>
+      {% for p in item.ports %}
+      <tr data-search="{{ (p.label ~ ' ' ~ p.alias ~ ' ' ~ p.kind ~ ' ' ~ p.text)|lower }}" data-state="{{ p.cls }}">
+        <td class="mono"><b>{{ p.label }}</b></td>
+        <td>{{ 'Uplink' if p.kind == 'uplink' else 'Access' }}</td>
+        <td>{{ p.alias or '—' }}</td>
+        <td>{{ port_pill(p.cls) }}</td>
+        <td class="mono faint">{{ p.changed_at or '—' }}</td>
+        <td>
+          {% if is_admin %}<form method="post" action="{{ url_for('switches.watch', port_id=p.id) }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <input type="hidden" name="back" value="{{ url_for('switches.detail', switch_id=sw.id) }}">
+            <button class="btn btn-sm" type="submit" aria-label="{{ 'Stop watching' if p.expected_up else 'Watch' }} port {{ p.label }}">{{ 'Watching · stop' if p.expected_up else 'Watch' }}</button>
+          </form>{% else %}<span class="faint">{{ 'Watching' if p.expected_up else '—' }}</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      <tr class="no-results" hidden><td colspan="6" class="empty-row">No ports match your search or filter.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card panel">
+  <div class="panel-head"><div><h3>Recent events <span class="count">{{ events|length }}</span></h3><p class="section-sub">Ports and switch changes, newest first.</p></div></div>
+  <table class="table">
+    <thead><tr><th>Time</th><th>Event</th><th>Port</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr><td class="mono">{{ e.ts }}</td><td>{{ event_label.get(e.event, e.event) }}</td><td class="mono">{{ e.port_label or '—' }}</td><td>{{ e.detail or '—' }}</td></tr>
+      {% else %}<tr><td colspan="4" class="empty-row">Nothing has changed on this switch yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card panel">
+  <div class="panel-head"><div><h3>About this switch</h3></div>{% if is_admin %}<a class="link-strong" href="{{ url_for('switches.edit', switch_id=sw.id) }}">Edit {{ icon('arrow', 14) }}</a>{% endif %}</div>
+  <div class="setting-row"><div><b>Location</b><span>{{ sw.location }}</span></div></div>
+  <div class="setting-row"><div><b>Model and serial</b><span>{{ sw.model or 'Not listed' }}{% if sw.serial %} · <span class="mono">{{ sw.serial }}</span>{% endif %}</span></div></div>
+  {% if sw.notes %}<div class="setting-row"><div><b>Notes</b><span>{{ sw.notes }}</span></div></div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading with context %}
+
+{% block content %}
+{{ page_heading('Shift handover', 'A concise operational snapshot for the next hotel IT shift.') }}
+
+<div class="handover-tools">
+  <form method="get" action="{{ url_for('views.handover') }}" class="refresh-form panel-tools">
+    <label class="sr-only" for="handover-hours">Report period</label>
+    <select id="handover-hours" class="select" name="hours" data-autosubmit>
+      {% for value in (8, 12, 24) %}<option value="{{ value }}" {{ 'selected' if hours == value }}>{{ value }} hours</option>{% endfor %}
+    </select>
+    <button class="btn" type="submit">Update</button>
+  </form>
+  <button type="button" class="btn" data-print>{{ icon('activity', 15) }} Print handover</button>
+</div>
+<p class="handover-period">Period: {{ since.strftime('%Y-%m-%d %H:%M') }} – {{ generated_at.strftime('%Y-%m-%d %H:%M') }} · Generated {{ generated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+
+<div class="stats handover-stats">
+  <div class="card stat"><div class="stat-label">Unhealthy now</div><div class="stat-value">{{ unhealthy|length }}</div><div class="stat-sub">Down, warning or threat</div></div>
+  <div class="card stat"><div class="stat-label">Alerts opened</div><div class="stat-value">{{ opened|length }}</div><div class="stat-sub">During selected period</div></div>
+  <div class="card stat"><div class="stat-label">Acknowledged</div><div class="stat-value">{{ acknowledged|length }}</div><div class="stat-sub">During selected period</div></div>
+  <div class="card stat"><div class="stat-label">Resolved</div><div class="stat-value">{{ resolved|length }}</div><div class="stat-sub">During selected period</div></div>
+</div>
+
+<section class="card panel panel-first">
+  <div class="panel-head"><div><h3>Current unhealthy devices <span class="count">{{ unhealthy|length }}</span></h3><p class="section-sub">Devices in active maintenance are listed separately below.</p></div></div>
+  <table class="table">
+    <thead><tr><th>Device</th><th>Type</th><th>Status</th><th>IP address</th><th>Last check</th></tr></thead>
+    <tbody>
+      {% for device in unhealthy %}
+      <tr><td class="cell-title">{{ device.name }}</td><td>{{ device.type|replace('_', ' ')|title }}</td>
+        <td><span class="pill pill-{{ device.status }}"><span class="dot"></span>{{ device.status|capitalize }}</span></td>
+        <td class="mono">{{ device.ip or '—' }}</td><td>{{ device.last_check_label }}</td></tr>
+      {% else %}<tr><td colspan="5" class="empty-row">No unhealthy devices are currently reported.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card panel">
+  <div class="panel-head"><div><h3>Alerts opened <span class="count">{{ opened|length }}</span></h3><p class="section-sub">Alert records created in the selected period.</p></div></div>
+  <table class="table">
+    <thead><tr><th>Time</th><th>Alert</th><th>Device</th><th>Severity</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for alert in opened %}
+      <tr><td class="mono">{{ alert.created_at }}</td><td class="cell-title">{{ alert.title }}</td><td>{{ alert.device_name }}</td>
+        <td>{{ alert.severity|capitalize }}</td><td>{{ alert.status|capitalize }}</td></tr>
+      {% else %}<tr><td colspan="5" class="empty-row">No alerts were opened during this period.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<div class="handover-grid">
+  {% for title, events in (('Acknowledged', acknowledged), ('Resolved', resolved)) %}
+  <section class="card panel">
+    <div class="panel-head"><div><h3>Alerts {{ title|lower }} <span class="count">{{ events|length }}</span></h3></div></div>
+    <table class="table">
+      <thead><tr><th>Time</th><th>By</th><th>Detail</th></tr></thead>
+      <tbody>{% for event in events %}<tr><td class="mono">{{ event.ts }}</td><td>{{ event.actor }}</td><td>{{ event.detail }}</td></tr>
+      {% else %}<tr><td colspan="3" class="empty-row">No alerts {{ title|lower }} during this period.</td></tr>{% endfor %}</tbody>
+    </table>
+  </section>
+  {% endfor %}
+</div>
+
+<section class="card panel">
+  <div class="panel-head"><div><h3>WAN link events <span class="count">{{ wan_events|length }}</span></h3><p class="section-sub">WAN-related status and alert activity recorded in the audit log.</p></div></div>
+  <table class="table">
+    <thead><tr><th>Time</th><th>Event</th><th>Detail</th></tr></thead>
+    <tbody>{% for event in wan_events %}<tr><td class="mono">{{ event.ts }}</td><td>{{ event.action|replace('_', ' ')|title }}</td><td>{{ event.detail }}</td></tr>
+    {% else %}<tr><td colspan="3" class="empty-row">No WAN events were recorded during this period.</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+
+<section class="card panel">
+  <div class="panel-head"><div><h3>Active maintenance <span class="count">{{ maintenance_windows|length }}</span></h3><p class="section-sub">Polling continues; new down and warning alerts are suppressed for these devices.</p></div></div>
+  <table class="table">
+    <thead><tr><th>Device</th><th>Reason</th><th>Window ends</th><th>Created by</th></tr></thead>
+    <tbody>{% for window in maintenance_windows %}<tr><td class="cell-title">{{ window.device_name }}</td><td>{{ window.reason }}</td><td class="mono">{{ window.ends_at }}</td><td>{{ window.created_by }}</td></tr>
+    {% else %}<tr><td colspan="4" class="empty-row">No active maintenance windows.</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+
+<section class="card panel">
+  <div class="panel-head"><div><h3>Recent authentication and configuration activity <span class="count">{{ auth_config|length }}</span></h3><p class="section-sub">Sign-ins, account changes, device changes, and monitoring configuration updates.</p></div></div>
+  <table class="table">
+    <thead><tr><th>Time</th><th>Actor</th><th>Activity</th><th>Detail</th></tr></thead>
+    <tbody>{% for event in auth_config %}<tr><td class="mono">{{ event.ts }}</td><td>{{ event.actor }}</td><td>{{ event.action|replace('_', ' ')|title }}</td><td>{{ event.detail }}</td></tr>
+    {% else %}<tr><td colspan="4" class="empty-row">No authentication or configuration changes were recorded during this period.</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading with context %}
+
+{% block content %}
+{{ page_heading('Logs', 'Search your monitoring activity.') }}
+
+<div class="card panel panel-first">
+  {% if logs %}
+  <div class="panel-head">
+    <div><h3>Audit log <span class="count">{{ logs|length }}</span></h3><p class="section-sub">Sign-ins, alert actions and inventory changes. Newest first, last 200 entries.</p></div>
+    <div class="panel-tools">
+      <select class="select" data-filter-select="log-table" data-key="action" aria-label="Filter by action">
+        <option value="">All actions</option>
+        <option value="login">Sign-in</option>
+        <option value="login_failed">Failed sign-in</option>
+        <option value="logout">Sign-out</option>
+        <option value="alert_acknowledged">Alert acknowledged</option>
+        <option value="alert_resolved">Alert resolved</option>
+        <option value="device_added">Device added</option>
+        <option value="device_updated">Device updated</option>
+        <option value="device_deleted">Device removed</option>
+      </select>
+      <label class="search">{{ icon('search', 15) }}<input type="search" placeholder="Search logs..." aria-label="Search logs" data-filter="log-table"></label>
+    </div>
+  </div>
+  <table class="table" id="log-table">
+    <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for l in logs %}
+      <tr data-search="{{ (l.ts ~ ' ' ~ l.actor ~ ' ' ~ l.action ~ ' ' ~ l.detail)|lower }}" data-action="{{ l.action }}">
+        <td class="mono">{{ l.ts }}</td>
+        <td>{{ l.actor }}</td>
+        <td><span class="pill {{ 'pill-down' if l.action == 'login_failed' else 'pill-unknown' }}">{{ l.action|replace('_', ' ') }}</span></td>
+        <td>{{ l.detail }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="no-results" hidden><td colspan="4" class="empty-row">No log entries match your search or filter.</td></tr>
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    {{ icon('activity', 22, 'muted') }}
+    <b>No audit log connected</b>
+    <span>Login and infrastructure events will appear here once audit logging is configured.</span>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

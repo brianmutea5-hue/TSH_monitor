@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading, device_table with context %}
+{% set autorefresh = true %}
+{% set live_device_status = true %}
+
+{% block content %}
+{{ page_heading('Network', 'Explore and manage your connected infrastructure.') }}
+
+<div class="card info-card">
+  <span class="icon-plain">{{ icon('globe', 20) }}</span>
+  <div class="info-text">
+    <b>Switch and port monitoring</b>
+    <span>Switches are grouped by their designated area. Admin-enabled ports that report down create an alert in the SOC Alerts page.</span>
+  </div>
+  <a class="link-strong" href="{{ url_for('views.alerts') }}#vendor-contacts">Vendor contacts {{ icon('chevron', 14) }}</a>
+  {% if session.get('role') == 'admin' %}<a class="btn btn-dark" href="{{ url_for('views.device_new') }}">{{ icon('plus', 15) }} Add device</a>{% endif %}
+</div>
+
+<div class="card panel">
+  <div class="panel-head">
+    <div>
+      <h3>Switches <span class="count">{{ switches|length }}</span></h3>
+      <p class="section-sub">
+        {% if switch_monitor_configured %}
+        SNMPv{{ cfg.SWITCH_SNMP_VERSION }} · Poll interval {{ cfg.SWITCH_POLL_INTERVAL_SECONDS }}s ·
+        {% if switch_monitor_status and switch_monitor_fresh %}
+        Last poll {{ switch_monitor_status.last_checked }}
+        {% elif switch_monitor_status %}
+        Last poll is stale
+        {% else %}
+        Waiting for first poll
+        {% endif %}
+        {% else %}
+        Live port status is unavailable until SNMP is configured
+        {% endif %}
+      </p>
+    </div>
+    <div class="panel-tools">
+      <form method="post" action="{{ url_for('views.network') }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="btn" type="submit" {% if not switch_monitor_configured %}disabled{% endif %}>{{ icon('refresh', 14) }} Poll now</button>
+      </form>
+      <label class="search">{{ icon('search', 15) }}<input type="search" placeholder="Search switches or areas..." aria-label="Search switches" data-filter="switch-table"></label>
+    </div>
+  </div>
+
+  {% if not switch_monitor_configured %}
+  <div class="switch-notice" role="status">
+    {% if cfg.SWITCH_SNMP_VERSION == '3' %}
+    Configure the SNMPv3 username, security level, and required keys in the local <code>.env</code> file. Secret values are not displayed. No port status is inferred until the profile is valid.
+    {% else %}
+    Configure a read-only SNMPv2c community as <code>SWITCH_SNMP_COMMUNITY</code> in the local <code>.env</code> file, enable SNMP on the switches, and restart the app. No port status is inferred while monitoring is disabled.
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="switch-list" id="switch-table">
+    {% for switch in switches %}
+    <details class="switch-card {{ 'switch-card-down' if switch.down_count }}" data-search="{{ (switch.name ~ ' ' ~ switch.role ~ ' ' ~ (switch.ip or ''))|lower }}">
+      <summary class="switch-summary">
+        <span class="switch-summary-main">
+          <span class="cell-title">{{ switch.name }}</span>
+          <span class="cell-sub">{{ switch.role or 'Area not specified' }} · {{ switch.ip or 'No IP address' }}{% if switch.model %} · {{ switch.model }}{% endif %}</span>
+        </span>
+        {% if switch.error %}
+        <span class="pill pill-unknown"><span class="dot"></span>{{ switch.error }}</span>
+        {% elif not switch_monitor_configured or not switch.ports %}
+        <span class="pill pill-unknown"><span class="dot"></span>{{ 'No port data' if switch_monitor_configured else 'Not monitored' }}</span>
+        {% elif not switch.ports_fresh %}
+        <span class="pill pill-unknown"><span class="dot"></span>Stale port data</span>
+        {% elif switch.down_count %}
+        <span class="pill pill-down"><span class="dot"></span>{{ switch.down_count }} port{{ '' if switch.down_count == 1 else 's' }} down</span>
+        {% else %}
+        <span class="pill pill-healthy"><span class="dot"></span>{{ switch.ports|length }} ports monitored</span>
+        {% endif %}
+      </summary>
+      <div class="switch-port-list">
+        {% if switch.error and switch.ports %}
+        <p class="switch-empty">Live poll failed; showing the last reported port state and timestamp.</p>
+        {% endif %}
+        {% if switch.ports %}
+        <table class="table">
+          <thead><tr><th>Port</th><th>ifIndex</th><th>Status</th><th>Last seen</th></tr></thead>
+          <tbody>
+            {% for port in switch.ports %}
+            <tr class="{{ 'port-row-down' if port.state == 'down' }}">
+              <td>{{ port.port_name }}</td>
+              <td class="mono">{{ port.port_index }}</td>
+              <td>
+                {% if not port.fresh %}
+                <span class="pill pill-unknown"><span class="dot"></span>Stale · last known {{ port.last_state|capitalize }}</span>
+                {% elif port.state == 'down' %}
+                <span class="pill pill-down"><span class="dot"></span>Down</span>
+                {% elif port.state == 'up' %}
+                <span class="pill pill-healthy"><span class="dot"></span>Up</span>
+                {% elif port.state == 'disabled' %}
+                <span class="pill pill-unknown"><span class="dot"></span>Administratively disabled</span>
+                {% else %}
+                <span class="pill pill-warning"><span class="dot"></span>{{ port.state|capitalize }}</span>
+                {% endif %}
+              </td>
+              <td class="muted">{{ port.last_seen }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% elif switch.error %}
+        <p class="switch-empty">{{ switch.error }}. Check the IP address, SNMP settings, and network access.</p>
+        {% elif switch_monitor_configured %}
+        <p class="switch-empty">No interface data was returned for this switch.</p>
+        {% else %}
+        <p class="switch-empty">Port status will appear here after SNMP is configured.</p>
+        {% endif %}
+      </div>
+    </details>
+    {% else %}
+    <div class="empty-row">No switches in inventory yet. Add a switch device to monitor it.</div>
+    {% endfor %}
+    <p class="no-results empty-row" hidden>No switches match your search.</p>
+  </div>
+  <div class="switch-alert-link"><a class="link-strong" href="{{ url_for('views.alerts') }}">View SOC alerts {{ icon('chevron', 14) }}</a></div>
+</div>
+
+<div class="card panel">
+  <div class="panel-head">
+    <div>
+      <h3>WAN links <span class="count">{{ wan_links|length }}</span></h3>
+      <p class="section-sub">Link state comes from a trusted monitor reporting to the telemetry API; stale or missing reports remain unknown.</p>
+    </div>
+  </div>
+  <table class="table">
+    <thead><tr><th>Link</th><th>Provider</th><th>Status</th><th>Last report</th></tr></thead>
+    <tbody>
+      {% for wan in wan_links %}
+      {% set state = wan.status if wan.status in ('healthy', 'warning', 'down') else 'unknown' %}
+      {% set label = {'healthy': 'Up', 'warning': 'Degraded', 'down': 'Down', 'unknown': 'Unknown'}[state] %}
+      <tr>
+        <td><div class="cell-title">{{ wan.name }}</div></td>
+        <td>{{ wan.role or 'Provider not specified' }}</td>
+        <td><span class="pill pill-{{ state }}"><span class="dot"></span>{{ label }}</span></td>
+        <td class="muted">{{ wan.telemetry_seen or 'No report received' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="empty-row">No WAN links are registered.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card panel">
+  <div class="panel-head">
+    <div>
+      <h3>Access points &amp; guest Wi-Fi <span class="count">{{ access_points|length }}</span></h3>
+      <p class="section-sub">Connected clients, RF utilization, average signal, and Guest VLAN DNS/DHCP latency</p>
+    </div>
+  </div>
+  <table class="table">
+    <thead>
+      <tr><th>Access point / area</th><th>Status</th><th>Clients</th><th>Channel</th><th>Avg RSSI</th><th>DNS</th><th>DHCP</th><th>Last seen</th></tr>
+    </thead>
+    <tbody>
+      {% for ap in access_points %}
+      <tr>
+        <td><div class="cell-title">{{ ap.name }}</div><div class="cell-sub">{{ ap.role or 'Area not specified' }} · {{ ap.ip or 'No IP address' }}{% if ap.model %} · {{ ap.model }}{% endif %}</div></td>
+        <td><span class="pill pill-{{ ap.state }}"><span class="dot"></span>{{ ap.state|capitalize }}</span></td>
+        <td>{{ ap.connected_clients if ap.connected_clients is not none else '—' }}</td>
+        <td>{{ ap.channel_utilization ~ '%' if ap.channel_utilization is not none else '—' }}</td>
+        <td>{{ ap.avg_rssi ~ ' dBm' if ap.avg_rssi is not none else '—' }}</td>
+        <td>{{ ap.dns_latency_ms ~ ' ms' if ap.dns_latency_ms is not none else '—' }}</td>
+        <td>{{ ap.dhcp_latency_ms ~ ' ms' if ap.dhcp_latency_ms is not none else '—' }}</td>
+        <td class="muted">{{ ap.ap_last_seen or 'No telemetry' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="empty-row">No access points registered. Add an Access point device, then send its KPIs to the telemetry API.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card panel">
+  <div class="panel-head">
+    <div>
+      <h3>All devices <span class="count">{{ devices|length }}</span></h3>
+      <p class="section-sub">Servers, switches, storage and other network inventory</p>
+    </div>
+    <div class="panel-tools">
+      <select class="select" data-filter-select="all-table" data-key="type" aria-label="Filter by device type">
+        <option value="">All types</option>
+        <option value="host">Physical hosts</option>
+        <option value="vm">Virtual machines</option>
+        <option value="server">Servers</option>
+        <option value="storage">Storage / NAS</option>
+        <option value="switch">Switches</option>
+        <option value="access_point">Access points</option>
+        <option value="wan_link">WAN links</option>
+        <option value="device">Other devices</option>
+      </select>
+      <label class="search">{{ icon('search', 15) }}<input type="search" placeholder="Search devices..." aria-label="Search devices" data-filter="all-table"></label>
+    </div>
+  </div>
+  {{ device_table(devices, 'all-table') }}
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading, alert_item with context %}
+{% set autorefresh = true %}
+
+{% block content %}
+{{ page_heading('Threats', 'Review security events that need your attention.') }}
+
+<div class="card panel panel-first">
+  <div class="panel-head">
+    <div>
+      <h3>Security threats <span class="count">{{ alerts|length }}</span></h3>
+      <p class="section-sub">{{ 'These example events are simulated, not live detections.' if simulation_mode else 'Malware, man-in-the-middle, virus and network attack detections.' }}</p>
+    </div>
+    <form method="get"><select name="status" class="select" data-autosubmit aria-label="Filter by status">
+      <option value="all" {{ 'selected' if status == 'all' }}>All statuses</option>
+      <option value="open" {{ 'selected' if status == 'open' }}>Open</option>
+      <option value="acknowledged" {{ 'selected' if status == 'acknowledged' }}>Acknowledged</option>
+      <option value="resolved" {{ 'selected' if status == 'resolved' }}>Resolved</option>
+    </select></form>
+  </div>
+  {% for a in alerts %}{{ alert_item(a, url_for('views.threats')) }}{% else %}<div class="empty-row">No threats match this filter.</div>{% endfor %}
+</div>
+
+{# What this page is meant to catch. Each item turns "Connected" once a real sensor feeds it. #}
+{% set coverage = [
+  ('Malware', 'Suspicious processes, known-bad file hashes, unexpected outbound connections.'),
+  ('Viruses and ransomware', 'Mass file changes or renames, antivirus alerts, antivirus switched off.'),
+  ('Man-in-the-middle', 'ARP spoofing, duplicate MAC for one IP, rogue DHCP, gateway MAC change, DNS hijack.'),
+  ('Network attacks', 'Port scans, RDP/SSH brute force, unknown devices, rogue Wi-Fi access points.') ] %}
+<div class="card panel">
+  <div class="panel-head">
+    <div>
+      <h3>Detection coverage</h3>
+      <p class="section-sub">Threat types this dashboard is built to show in red.</p>
+    </div>
+  </div>
+  <div class="coverage-grid">
+    {% for name, text in coverage %}
+    <div class="coverage-item">
+      <span class="icon-box icon-box-sm icon-box-red">{{ icon('shield', 16) }}</span>
+      <div class="coverage-text"><b>{{ name }}</b><span>{{ text }}</span></div>
+      <span class="pill pill-unknown"><span class="dot"></span>{{ 'Simulated' if simulation_mode else 'Not connected' }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

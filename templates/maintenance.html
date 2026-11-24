@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading with context %}
+
+{% block content %}
+{{ page_heading('Maintenance windows', 'Schedule planned work and pause new down or warning alerts for affected devices.') }}
+
+{% if is_admin %}
+<div class="card panel panel-first">
+  <div class="panel-head"><div><h3>Schedule a window</h3><p class="section-sub">Polling and metric updates continue during maintenance.</p></div></div>
+  <form method="post" action="{{ url_for('views.maintenance') }}" class="maintenance-form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label class="field"><span>Device</span>
+      <select class="select select-full" name="device_id" required>
+        <option value="">Choose a device</option>
+        {% for device in devices %}<option value="{{ device.id }}">{{ device.name }} · {{ device.type|replace('_', ' ')|title }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="field"><span>Reason</span><input name="reason" maxlength="200" required placeholder="e.g. Planned firmware upgrade"></label>
+    <label class="field"><span>Starts</span><input type="datetime-local" name="starts_at" required></label>
+    <label class="field"><span>Ends</span><input type="datetime-local" name="ends_at" required></label>
+    <button class="btn btn-dark" type="submit">{{ icon('plus', 15) }} Schedule window</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="card panel {{ '' if is_admin else 'panel-first' }}">
+  <div class="panel-head">
+    <div><h3>Scheduled windows <span class="count">{{ windows|length }}</span></h3><p class="section-sub">Active windows show a Maintenance badge; future windows take effect at their start time.</p></div>
+  </div>
+  <table class="table">
+    <thead><tr><th>Device</th><th>Reason</th><th>Window</th><th>Created by</th><th>Status</th>{% if is_admin %}<th><span class="sr-only">Actions</span></th>{% endif %}</tr></thead>
+    <tbody>
+      {% for window in windows %}
+      <tr>
+        <td class="cell-title">{{ window.device_name }}</td>
+        <td>{{ window.reason }}</td>
+        <td class="mono">{{ window.starts_at }}<div class="cell-sub">to {{ window.ends_at }}</div></td>
+        <td>{{ window.created_by }}</td>
+        <td><span class="pill {{ 'pill-maintenance' if window.window_state == 'Active' else 'pill-unknown' }}"><span class="dot"></span>{{ window.window_state }}</span></td>
+        {% if is_admin %}<td class="right">
+          {% if window.is_active and window.window_state in ('Active', 'Scheduled') %}
+          <form method="post" action="{{ url_for('views.maintenance_cancel', window_id=window.id) }}" data-confirm="End this maintenance window?">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm">Cancel</button>
+          </form>
+          {% endif %}
+        </td>{% endif %}
+      </tr>
+      {% else %}
+      <tr><td colspan="{{ 6 if is_admin else 5 }}" class="empty-row">No maintenance windows have been scheduled.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

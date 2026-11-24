@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading, host_card, alert_item, legend with context %}
+{% set autorefresh = true %}
+
+{% block content %}
+{{ page_heading('Infrastructure overview', 'A real-time view of your hardware and network security.') }}
+
+{% if s.issues %}
+<div class="banner banner-red" role="status">
+  <span class="banner-icon">{{ icon('alert', 22) }}</span>
+  <div class="banner-text">
+    <div class="banner-title">{{ s.issues }} ISSUES DETECTED</div>
+    <div class="banner-sub">Some items need your attention across your infrastructure.</div>
+  </div>
+  <a class="link-strong" href="{{ url_for('views.alerts') }}">View alerts {{ icon('arrow', 14) }}</a>
+</div>
+{% else %}
+<div class="banner banner-green" role="status">
+  <span class="banner-icon">{{ icon('check', 22) }}</span>
+  <div class="banner-text">
+    <div class="banner-title">ALL SYSTEMS HEALTHY</div>
+    <div class="banner-sub">Every monitored server is working well.</div>
+  </div>
+</div>
+{% endif %}
+
+<div class="stats">
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Servers online</span><span class="icon-box icon-box-sm">{{ icon('server', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(s.online) }}</div>
+    <div class="stat-sub"><span class="dot dot-green"></span>{{ 'Simulated host status' if simulation_mode else 'Reachable hosts' }}</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Servers down</span><span class="icon-box icon-box-sm">{{ icon('monitor', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(s.down) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-red' if s.down else 'dot-green' }}"></span>{{ 'Simulated host status' if simulation_mode else 'Unreachable hosts' }}</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Active threats</span><span class="icon-box icon-box-sm icon-box-red">{{ icon('shield', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(s.threats) }}</div>
+    <div class="stat-sub"><span class="dot {{ 'dot-red' if s.threats else 'dot-green' }}"></span>{{ 'Needs your attention' if s.threats else 'No active threats' }}</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-top"><span class="stat-label">Open alerts</span><span class="icon-box icon-box-sm icon-box-amber">{{ icon('bell', 16) }}</span></div>
+    <div class="stat-value">{{ '%02d'|format(s.open_alerts) }}</div>
+    <div class="stat-sub"><span class="dot dot-amber"></span>Across all devices</div>
+  </div>
+</div>
+
+<div class="section-head">
+  <div>
+    <div class="section-label">Infrastructure</div>
+    <h2>Physical hosts <span class="count">{{ cards|length }}</span></h2>
+    <p class="section-sub">Hardware health and resource utilization at a glance</p>
+  </div>
+  <a class="link-strong" href="{{ url_for('views.servers') }}">View all servers {{ icon('arrow', 14) }}</a>
+</div>
+<div class="host-grid">
+  {% for h in cards %}{{ host_card(h) }}{% endfor %}
+</div>
+{{ legend() }}
+
+<div class="card panel">
+  <div class="panel-head">
+    <div><h3>Recent alerts</h3><p class="section-sub">Latest events across your infrastructure.</p></div>
+    <a class="link-strong" href="{{ url_for('views.alerts') }}">All alerts {{ icon('arrow', 14) }}</a>
+  </div>
+  {% for a in recent %}{{ alert_item(a, url_for('views.overview')) }}{% else %}<div class="empty-row">No alerts.</div>{% endfor %}
+</div>
+{% endblock %}

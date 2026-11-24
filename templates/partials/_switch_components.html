@@ -1,0 +1,70 @@
+{# Switch pieces: Network tabs, status pills, port strip, port key, faceplate #}
+{% from 'partials/_icons.html' import icon %}
+
+{# Tabs shown at the top of the Network page #}
+{% macro net_tabs(active) %}
+<nav class="subtabs" aria-label="Network sections">
+  <a class="subtab {{ 'active' if active == 'devices' }}" href="{{ url_for('views.network') }}" {% if active == 'devices' %}aria-current="page"{% endif %}>{{ icon('globe', 15) }} All devices</a>
+  <a class="subtab {{ 'active' if active == 'switches' }}" href="{{ url_for('switches.index') }}" {% if active == 'switches' %}aria-current="page"{% endif %}>
+    {{ icon('network', 15) }} Switches
+    {% if soc and (soc.ports_down or soc.switches_offline) %}<span class="count count-red" title="Ports down or switches offline">{{ soc.ports_down + soc.switches_offline }}</span>{% endif %}
+  </a>
+</nav>
+{% endmacro %}
+
+{# One pill for a whole switch #}
+{% macro sw_pill(item) %}
+{%- if item.health == 'maintenance' -%}<span class="pill pill-maintenance"><span class="dot"></span>Maintenance</span>
+{%- elif item.health == 'down' -%}<span class="pill pill-down"><span class="dot"></span>Offline</span>
+{%- elif item.health == 'threat' -%}<span class="pill pill-threat"><span class="dot"></span>Threat</span>
+{%- elif item.health == 'unknown' -%}<span class="pill pill-unknown"><span class="dot"></span>Not read yet</span>
+{%- elif item.sw.state == 'online' and not item.sw.snmp_ok -%}<span class="pill pill-warning"><span class="dot"></span>No SNMP</span>
+{%- elif item.health == 'warning' -%}<span class="pill pill-warning"><span class="dot"></span>Needs attention</span>
+{%- else -%}<span class="pill pill-healthy"><span class="dot"></span>Healthy</span>{%- endif -%}
+{% endmacro %}
+
+{# One pill for a port #}
+{% macro port_pill(cls) %}
+{%- set m = {'up': ('healthy', 'Up'), 'down': ('down', 'Down'), 'attack': ('threat', 'Attack'),
+             'idle': ('unknown', 'Not in use'), 'off': ('unknown', 'Switched off'), 'unknown': ('unknown', 'Not read yet')} -%}
+<span class="pill pill-{{ m[cls][0] }}"><span class="dot"></span>{{ m[cls][1] }}</span>
+{% endmacro %}
+
+{# Tiny overview of every port on a switch #}
+{% macro port_strip(ports) %}
+<span class="strip" role="img" aria-label="Overview of all ports">
+  {%- for p in ports %}<i class="pt pt-{{ p.cls }}" title="{{ p.tip }}"></i>{% endfor -%}
+</span>
+{% endmacro %}
+
+{# What each port colour means #}
+{% macro port_key() %}
+<div class="port-key" aria-label="Port colour key">
+  <span><i class="pt pt-up"></i> Working</span>
+  <span><i class="pt pt-down"></i> Down: should be working</span>
+  <span><i class="pt pt-attack"></i> Attack or suspicious</span>
+  <span><i class="pt pt-idle"></i> Not in use</span>
+  <span><i class="pt pt-off"></i> Switched off on purpose</span>
+  <span><i class="pt pt-unknown"></i> Not read yet</span>
+</div>
+{% endmacro %}
+
+{# Port diagram: odd ports on top, even below, like the front of the real switch #}
+{% macro faceplate(access, uplinks) %}
+<div class="faceplate">
+  <div class="faceplate-group">
+    <div class="faceplate-label">Access ports <span>{{ access|length }}</span></div>
+    <div class="ports-grid">
+      {%- for p in access %}<span class="port port-{{ p.cls }}" tabindex="0" title="{{ p.tip }}" aria-label="{{ p.tip }}"><b>{{ p.num }}</b></span>{% endfor -%}
+    </div>
+  </div>
+  {% if uplinks %}
+  <div class="faceplate-group">
+    <div class="faceplate-label">Uplinks <span>{{ uplinks|length }}</span></div>
+    <div class="ports-grid ports-grid-uplink">
+      {%- for p in uplinks %}<span class="port port-uplink port-{{ p.cls }}" tabindex="0" title="{{ p.tip }}" aria-label="{{ p.tip }}"><b>{{ p.num }}</b></span>{% endfor -%}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}

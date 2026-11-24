@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% from 'partials/_icons.html' import icon %}
+{% from 'partials/_components.html' import page_heading, host_card, device_table, legend with context %}
+{% set autorefresh = true %}
+{% set live_device_status = true %}
+
+{% block content %}
+{{ page_heading('Servers', 'Your physical hosts and virtual machines, in one place.') }}
+
+<div class="section-head section-head-tight">
+  <div>
+    <h2>Physical hosts <span class="count">{{ cards|length }}</span></h2>
+    <p class="section-sub">Click a host to see its virtual machines.</p>
+  </div>
+  {% if session.get('role') == 'admin' %}<a class="btn btn-dark" href="{{ url_for('views.device_new') }}">{{ icon('plus', 15) }} Add device</a>{% endif %}
+</div>
+<div class="host-grid">
+  {% for h in cards %}{{ host_card(h) }}{% endfor %}
+</div>
+{{ legend() }}
+
+<div class="card panel">
+  <div class="panel-head">
+    <div>
+      <h3>Virtual machines <span class="count">{{ vms|length }}</span></h3>
+      <p class="section-sub">Device status and check time update automatically; resource readings require a host agent.</p>
+    </div>
+    <div class="panel-tools">
+      <select class="select" data-filter-select="vm-table" data-key="parent" aria-label="Filter by host">
+        <option value="">All hosts</option>
+        {% for h in cards %}<option value="{{ h.name }}">{{ h.name }}</option>{% endfor %}
+      </select>
+      <label class="search">{{ icon('search', 15) }}<input type="search" placeholder="Search devices..." aria-label="Search devices" data-filter="vm-table"></label>
+    </div>
+  </div>
+  {{ device_table(vms, 'vm-table') }}
+</div>
+{% endblock %}
